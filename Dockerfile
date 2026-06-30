@@ -1,6 +1,6 @@
 FROM ccr.ccs.tencentyun.com/ags-image/sandbox-code:latest
 
-LABEL org.opencontainers.image.title="pythonbase"
+LABEL org.opencontainers.image.title="swe-sandbox-base"
 LABEL org.opencontainers.image.description="Sandbox-compatible Linux and Python development environment"
 
 ARG DEBIAN_FRONTEND=noninteractive

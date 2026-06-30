@@ -5,7 +5,7 @@ Sandbox-compatible Linux + Python development image for Tencent Cloud Container 
 Image:
 
 ```bash
-conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 ## What's Included
@@ -48,7 +48,7 @@ Build for the current machine architecture:
 
 ```bash
 docker buildx build \
-  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest \
+  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest \
   .
 ```
 
@@ -56,7 +56,7 @@ If your platform requires pushing at build time, use:
 
 ```bash
 docker buildx build \
-  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest \
+  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest \
   --push \
   .
 ```
@@ -65,7 +65,7 @@ Build for Apple Silicon / ARM64:
 
 ```bash
 docker buildx build --platform linux/arm64 \
-  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest \
+  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest \
   .
 ```
 
@@ -73,7 +73,7 @@ Build for common x86 Linux servers:
 
 ```bash
 docker buildx build --platform linux/amd64 \
-  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest \
+  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest \
   .
 ```
 
@@ -81,7 +81,7 @@ Build and push a multi-architecture image for both x86 Linux servers and Apple S
 
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest \
+  -t conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest \
   --push \
   .
 ```
@@ -92,7 +92,7 @@ Run an interactive shell:
 
 ```bash
 docker run -it --rm \
-  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 This image defaults to:
@@ -106,7 +106,7 @@ Run with the current project mounted to `/workspace`:
 ```bash
 docker run -it --rm \
   -v "$PWD":/workspace \
-  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 Run with host Docker access:
@@ -115,7 +115,7 @@ Run with host Docker access:
 docker run -it --rm \
   -v "$PWD":/workspace \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 After entering the container, verify tools:
@@ -144,7 +144,7 @@ Do not bake secrets into the image. Pass the API endpoint and API key at runtime
 docker run -it --rm \
   -e OPENAI_BASE_URL="http://172.93.108.177:8081" \
   -e OPENAI_API_KEY="YOUR_OPENAI_API_KEY" \
-  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 Inside the container, initialize Codex config:
@@ -229,7 +229,7 @@ If you also mount persistent storage, consider mounting it at `/root/.codex` to 
 Push the local image:
 
 ```bash
-docker push conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+docker push conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 If you use `docker buildx build --push`, the image is pushed during the build step and you do not need to run `docker push` separately.
@@ -239,7 +239,7 @@ If you use `docker buildx build --push`, the image is pushed during the build st
 Pull from Tencent Cloud Container Registry:
 
 ```bash
-docker pull conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+docker pull conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 ## Host Without Docker
@@ -251,7 +251,7 @@ For Docker-in-container workflows, the recommended setup is:
 ```bash
 docker run -it --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 This lets the container use the host Docker daemon through the Docker socket.
