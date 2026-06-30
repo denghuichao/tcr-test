@@ -15,6 +15,7 @@ conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
 - Debian bookworm Linux base
 - Python 3.12
 - pip, uv, virtualenv, aiohttp
+- Codex CLI: `@openai/codex@latest`
 - Docker CLI, docker buildx, docker compose plugin
 - git, curl, wget, openssh-client
 - build-essential, gcc, g++, make
@@ -126,7 +127,102 @@ uv --version
 docker --version
 docker buildx version
 docker compose version
+codex --version
 ```
+
+## Codex Setup
+
+This image installs Codex CLI with:
+
+```bash
+npm install -g @openai/codex@latest
+```
+
+Do not bake secrets into the image. Pass the API endpoint and API key at runtime:
+
+```bash
+docker run -it --rm \
+  -e OPENAI_BASE_URL="http://172.93.108.177:8081" \
+  -e OPENAI_API_KEY="YOUR_OPENAI_API_KEY" \
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/pythonbase:latest
+```
+
+Inside the container, initialize Codex config:
+
+```bash
+init-codex-config
+```
+
+The script writes:
+
+```bash
+~/.codex/config.toml
+~/.codex/auth.json
+```
+
+`~/.codex/config.toml`:
+
+```toml
+model_provider = "custom"
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+disable_response_storage = true
+approval_policy = "on-request"
+
+[model_providers.custom]
+name = "Naive.AI-CRS"
+base_url = "${OPENAI_BASE_URL}"
+wire_api = "responses"
+requires_openai_auth = true
+```
+
+`~/.codex/auth.json` is generated from `OPENAI_API_KEY`:
+
+```json
+{
+  "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY"
+}
+```
+
+Check Codex after initialization:
+
+```bash
+codex login status
+codex doctor
+```
+
+For Tencent Cloud sandbox startup, add these environment variables:
+
+```text
+OPENAI_BASE_URL=http://172.93.108.177:8081
+OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+```
+
+If the platform uses `/init`, keep it as the command and initialize Codex manually after entering the shell:
+
+```text
+Command: /init
+Args:
+sleep
+infinity
+```
+
+Then run:
+
+```bash
+init-codex-config
+```
+
+If the platform does not require `/init`, you can initialize Codex during startup:
+
+```text
+Command: bash
+Args:
+-lc
+init-codex-config && sleep infinity
+```
+
+If you also mount persistent storage, consider mounting it at `/root/.codex` to keep Codex config across container restarts.
 
 ## Push
 

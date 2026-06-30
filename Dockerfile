@@ -42,6 +42,7 @@ RUN set -eux; \
             make \
             nano \
             net-tools \
+            nodejs \
             openssh-client \
             procps \
             python3 \
@@ -87,7 +88,14 @@ RUN set -eux; \
         pytest-cov \
         ruff \
         uv \
-        virtualenv
+        virtualenv; \
+    npm install -g @openai/codex@latest; \
+    npm cache clean --force; \
+    codex --version
+
+COPY scripts/init-codex-config.sh /usr/local/bin/init-codex-config
+
+RUN chmod +x /usr/local/bin/init-codex-config
 
 WORKDIR /workspace
 
