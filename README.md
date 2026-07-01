@@ -24,7 +24,7 @@ conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 
 Note: this image extends Tencent Cloud's `sandbox-code` base image, so it is a better fit for sandbox / code-interpreter style platforms than a plain Debian or Python image.
 
-Note: this image keeps the base image entrypoint, so the sandbox / E2B-compatible data plane can still start normally. The default command starts an internal Docker daemon before opening the shell.
+Note: this image keeps the base image entrypoint, so the sandbox / E2B-compatible data plane can still start normally. The default command starts an internal Docker daemon before opening the shell. The `docker` command is also wrapped to lazily start the daemon if a sandbox platform overrides the default command.
 
 ## Login
 
@@ -102,6 +102,8 @@ bash
 ```
 
 On startup, the default command starts `dockerd` and waits until `docker info` succeeds. The image does not override the base image entrypoint.
+
+If a platform overrides the image command and skips the default startup command, the `docker` CLI still lazily starts `dockerd` the first time you run daemon-backed commands such as `docker build`, `docker run`, or `docker info`.
 
 Run with the current project mounted to `/workspace`:
 
@@ -236,8 +238,10 @@ init-codex-config && sleep infinity
 If you enter an existing shell and need to start Docker manually, run:
 
 ```bash
-docker-entrypoint bash
+start-dockerd
 ```
+
+If you see `failed to connect to the docker API at unix:///var/run/docker.sock`, it means `dockerd` has not started. Run `start-dockerd`, then retry the Docker command. If `start-dockerd` fails, check `/tmp/dockerd.log` inside the sandbox.
 
 If the platform does not require `/init`, you can initialize Codex during startup with the same wrapper:
 

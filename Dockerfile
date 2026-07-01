@@ -101,8 +101,14 @@ RUN set -eux; \
 
 COPY scripts/init-codex-config.sh /usr/local/bin/init-codex-config
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+COPY scripts/start-dockerd.sh /usr/local/bin/start-dockerd
+COPY scripts/docker-wrapper.sh /usr/local/bin/docker
 
-RUN chmod +x /usr/local/bin/init-codex-config /usr/local/bin/docker-entrypoint
+RUN chmod +x \
+        /usr/local/bin/init-codex-config \
+        /usr/local/bin/docker-entrypoint \
+        /usr/local/bin/start-dockerd \
+        /usr/local/bin/docker
 
 WORKDIR /workspace
 
