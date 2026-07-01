@@ -24,7 +24,7 @@ conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 
 Note: this image extends Tencent Cloud's `sandbox-code` base image, so it is a better fit for sandbox / code-interpreter style platforms than a plain Debian or Python image.
 
-Note: this image starts an internal Docker daemon by default. The outer container must run with privileged permissions, or the platform must provide equivalent nested-container capabilities.
+Note: this image keeps the base image entrypoint, so the sandbox / E2B-compatible data plane can still start normally. The default command starts an internal Docker daemon before opening the shell.
 
 ## Login
 
@@ -101,7 +101,7 @@ This image defaults to:
 bash
 ```
 
-On startup, the entrypoint starts `dockerd` and waits until `docker info` succeeds.
+On startup, the default command starts `dockerd` and waits until `docker info` succeeds. The image does not override the base image entrypoint.
 
 Run with the current project mounted to `/workspace`:
 
@@ -222,26 +222,29 @@ START_DOCKERD=1
 
 Make sure the sandbox/container configuration enables privileged or nested-container mode; otherwise the internal Docker daemon cannot create child containers.
 
-If the platform uses `/init`, keep it as the command and initialize Codex manually after entering the shell:
+If the platform uses `/init`, keep it as the command and run the Docker startup wrapper as the first argument:
 
 ```text
 Command: /init
 Args:
-sleep
-infinity
+docker-entrypoint
+bash
+-lc
+init-codex-config && sleep infinity
 ```
 
-Then run:
+If you enter an existing shell and need to start Docker manually, run:
 
 ```bash
-init-codex-config
+docker-entrypoint bash
 ```
 
-If the platform does not require `/init`, you can initialize Codex during startup:
+If the platform does not require `/init`, you can initialize Codex during startup with the same wrapper:
 
 ```text
-Command: bash
+Command: docker-entrypoint
 Args:
+bash
 -lc
 init-codex-config && sleep infinity
 ```

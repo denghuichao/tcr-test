@@ -106,5 +106,4 @@ RUN chmod +x /usr/local/bin/init-codex-config /usr/local/bin/docker-entrypoint
 
 WORKDIR /workspace
 
-ENTRYPOINT ["tini", "--", "docker-entrypoint"]
-CMD ["bash"]
+CMD ["docker-entrypoint", "bash"]
