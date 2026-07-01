@@ -10,6 +10,7 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     TZ=Asia/Shanghai \
     DOCKER_HOST=unix:///var/run/docker.sock \
+    DOCKERD_DATA_ROOT=/mnt/dockerdata/docker \
     DOCKERD_STORAGE_DRIVER=vfs \
     START_DOCKERD=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -99,10 +100,13 @@ RUN set -eux; \
     codex --version; \
     dockerd --version
 
+RUN install -d /usr/local/lib
+
 COPY scripts/init-codex-config.sh /usr/local/bin/init-codex-config
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 COPY scripts/start-dockerd.sh /usr/local/bin/start-dockerd
 COPY scripts/docker-wrapper.sh /usr/local/bin/docker
+COPY scripts/container-env.sh /usr/local/lib/container-env.sh
 
 RUN chmod +x \
         /usr/local/bin/init-codex-config \

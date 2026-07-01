@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOCKER_BIN="${DOCKER_BIN:-/usr/bin/docker}"
-DOCKERD_LOG_FILE="${DOCKERD_LOG_FILE:-/tmp/dockerd.log}"
-DOCKERD_STORAGE_DRIVER="${DOCKERD_STORAGE_DRIVER:-vfs}"
+. /usr/local/lib/container-env.sh
+
+DOCKER_BIN="$(env_or_container_env DOCKER_BIN "/usr/bin/docker")"
+DOCKERD_DATA_ROOT="$(env_or_container_env DOCKERD_DATA_ROOT "/mnt/dockerdata/docker")"
+DOCKERD_EXTRA_ARGS="$(env_or_container_env DOCKERD_EXTRA_ARGS)"
+DOCKERD_LOG_FILE="$(env_or_container_env DOCKERD_LOG_FILE "/tmp/dockerd.log")"
+DOCKERD_STORAGE_DRIVER="$(env_or_container_env DOCKERD_STORAGE_DRIVER "vfs")"
 
 if "${DOCKER_BIN}" info >/dev/null 2>&1; then
     echo "Docker daemon is already available."
@@ -16,13 +20,15 @@ if [ -S /var/run/docker.sock ]; then
     exit 1
 fi
 
-mkdir -p /var/lib/docker /var/run
+mkdir -p "${DOCKERD_DATA_ROOT}" /var/run
 rm -f /var/run/docker.pid
 
-echo "Starting Docker daemon with ${DOCKERD_STORAGE_DRIVER} storage driver..."
+echo "Starting Docker daemon with ${DOCKERD_STORAGE_DRIVER} storage driver at ${DOCKERD_DATA_ROOT}..."
 dockerd \
     --host=unix:///var/run/docker.sock \
+    --data-root="${DOCKERD_DATA_ROOT}" \
     --storage-driver="${DOCKERD_STORAGE_DRIVER}" \
+    ${DOCKERD_EXTRA_ARGS} \
     >"${DOCKERD_LOG_FILE}" 2>&1 &
 
 dockerd_pid="$!"

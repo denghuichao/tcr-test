@@ -122,6 +122,14 @@ docker run --privileged -it --rm \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
+If a sandbox platform provides a larger or persistent work disk, point Docker's data root there:
+
+```text
+DOCKERD_DATA_ROOT=/mnt/dockerdata/docker
+```
+
+The daemon writes pulled images, layers, and BuildKit cache under this path. This is the most important setting for repeated `docker build` and `docker push` work inside a sandbox.
+
 After entering the container, verify tools:
 
 ```bash
@@ -141,6 +149,12 @@ The daemon uses the `vfs` storage driver by default because it is usually the mo
 docker run --privileged -it --rm \
   -e DOCKERD_STORAGE_DRIVER=overlay2 \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
+```
+
+You can also pass extra daemon flags:
+
+```text
+DOCKERD_EXTRA_ARGS=--max-concurrent-downloads=8 --max-concurrent-uploads=8
 ```
 
 To disable the internal daemon and use an externally mounted Docker socket instead:
@@ -242,6 +256,34 @@ start-dockerd
 ```
 
 If you see `failed to connect to the docker API at unix:///var/run/docker.sock`, it means `dockerd` has not started. Run `start-dockerd`, then retry the Docker command. If `start-dockerd` fails, check `/tmp/dockerd.log` inside the sandbox.
+
+If `docker build` fails with `no space left on device` under `/var/lib/docker/buildkit`, the daemon is running but Docker's data root is out of disk. Check space usage:
+
+```bash
+df -h
+docker system df
+```
+
+Clean unused Docker data:
+
+```bash
+docker builder prune -af
+docker system prune -af --volumes
+```
+
+For a lasting fix, start the sandbox with a larger data root:
+
+```text
+DOCKERD_DATA_ROOT=/mnt/dockerdata/docker
+```
+
+If supported by the sandbox kernel/filesystem, also use:
+
+```text
+DOCKERD_STORAGE_DRIVER=overlay2
+```
+
+The default `vfs` driver is compatible but uses much more disk than `overlay2`.
 
 If the platform does not require `/init`, you can initialize Codex during startup with the same wrapper:
 

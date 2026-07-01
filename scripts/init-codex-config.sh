@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CODEX_HOME="${CODEX_HOME:-${HOME}/.codex}"
-OPENAI_BASE_URL="${OPENAI_BASE_URL:-http://172.93.108.177:8081}"
+. /usr/local/lib/container-env.sh
+
+HOME_DIR="${HOME:-/root}"
+CODEX_HOME="$(env_or_container_env CODEX_HOME "${HOME_DIR}/.codex")"
+OPENAI_BASE_URL="$(env_or_container_env OPENAI_BASE_URL "http://172.93.108.177:8081")"
+
+OPENAI_API_KEY="$(env_or_container_env OPENAI_API_KEY)"
+export OPENAI_API_KEY
+
 mkdir -p "${CODEX_HOME}"
 chmod 700 "${CODEX_HOME}"
 
