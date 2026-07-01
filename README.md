@@ -16,7 +16,7 @@ conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 - Python 3.12
 - pip, uv, virtualenv, aiohttp
 - Codex CLI: `@openai/codex@latest`
-- Docker CLI, docker buildx, docker compose plugin
+- Docker Engine, Docker CLI, docker buildx, docker compose plugin
 - git, curl, wget, openssh-client
 - build-essential, gcc, g++, make
 - pytest, pytest-cov, ruff, black, mypy, ipython, debugpy
@@ -24,7 +24,7 @@ conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 
 Note: this image extends Tencent Cloud's `sandbox-code` base image, so it is a better fit for sandbox / code-interpreter style platforms than a plain Debian or Python image.
 
-Note: this image includes Docker client tools, not a Docker daemon. To run Docker commands inside this container, the host machine must have Docker installed and expose `/var/run/docker.sock` to the container.
+Note: this image starts an internal Docker daemon by default. The outer container must run with privileged permissions, or the platform must provide equivalent nested-container capabilities.
 
 ## Login
 
@@ -91,7 +91,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 Run an interactive shell:
 
 ```bash
-docker run -it --rm \
+docker run --privileged -it --rm \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
@@ -101,20 +101,22 @@ This image defaults to:
 bash
 ```
 
+On startup, the entrypoint starts `dockerd` and waits until `docker info` succeeds.
+
 Run with the current project mounted to `/workspace`:
 
 ```bash
-docker run -it --rm \
+docker run --privileged -it --rm \
   -v "$PWD":/workspace \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
-Run with host Docker access:
+Run with a persistent Docker data directory:
 
 ```bash
-docker run -it --rm \
+docker run --privileged -it --rm \
   -v "$PWD":/workspace \
-  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v swe-docker-lib:/var/lib/docker \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
@@ -125,9 +127,27 @@ python --version
 pip --version
 uv --version
 docker --version
+docker info
 docker buildx version
 docker compose version
 codex --version
+```
+
+The daemon uses the `vfs` storage driver by default because it is usually the most compatible inside sandboxed containers. If your platform supports overlay filesystems, you can use the faster `overlay2` driver:
+
+```bash
+docker run --privileged -it --rm \
+  -e DOCKERD_STORAGE_DRIVER=overlay2 \
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
+```
+
+To disable the internal daemon and use an externally mounted Docker socket instead:
+
+```bash
+docker run -it --rm \
+  -e START_DOCKERD=0 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
 ## Codex Setup
@@ -142,6 +162,7 @@ Do not bake secrets into the image. Pass the API endpoint and API key at runtime
 
 ```bash
 docker run -it --rm \
+  --privileged \
   -e OPENAI_BASE_URL="http://172.93.108.177:8081" \
   -e OPENAI_API_KEY="YOUR_OPENAI_API_KEY" \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
@@ -196,7 +217,10 @@ For Tencent Cloud sandbox startup, add these environment variables:
 ```text
 OPENAI_BASE_URL=http://172.93.108.177:8081
 OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+START_DOCKERD=1
 ```
+
+Make sure the sandbox/container configuration enables privileged or nested-container mode; otherwise the internal Docker daemon cannot create child containers.
 
 If the platform uses `/init`, keep it as the command and initialize Codex manually after entering the shell:
 
@@ -249,9 +273,8 @@ This image cannot run on a host that has no container runtime at all. Install Do
 For Docker-in-container workflows, the recommended setup is:
 
 ```bash
-docker run -it --rm \
-  -v /var/run/docker.sock:/var/run/docker.sock \
+docker run --privileged -it --rm \
   conductor-artifacts.tencentcloudcr.com/deploy-artifacts/swe-sandbox-base:latest
 ```
 
-This lets the container use the host Docker daemon through the Docker socket.
+This starts Docker inside the container. It still requires the outer host or sandbox platform to allow privileged nested containers.

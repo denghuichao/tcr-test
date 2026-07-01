@@ -9,6 +9,9 @@ ARG PIP_INDEX_URL=https://mirrors.cloud.tencent.com/pypi/simple
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     TZ=Asia/Shanghai \
+    DOCKER_HOST=unix:///var/run/docker.sock \
+    DOCKERD_STORAGE_DRIVER=vfs \
+    START_DOCKERD=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -64,7 +67,9 @@ RUN set -eux; \
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.tencent.com/docker-ce/linux/debian ${VERSION_CODENAME} stable" > /etc/apt/sources.list.d/docker.list; \
         apt-get update; \
         apt-get install -y --no-install-recommends \
+            containerd.io \
             docker-buildx-plugin \
+            docker-ce \
             docker-ce-cli \
             docker-compose-plugin; \
         ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime; \
@@ -91,12 +96,15 @@ RUN set -eux; \
         virtualenv; \
     npm install -g @openai/codex@latest; \
     npm cache clean --force; \
-    codex --version
+    codex --version; \
+    dockerd --version
 
 COPY scripts/init-codex-config.sh /usr/local/bin/init-codex-config
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 
-RUN chmod +x /usr/local/bin/init-codex-config
+RUN chmod +x /usr/local/bin/init-codex-config /usr/local/bin/docker-entrypoint
 
 WORKDIR /workspace
 
+ENTRYPOINT ["tini", "--", "docker-entrypoint"]
 CMD ["bash"]
